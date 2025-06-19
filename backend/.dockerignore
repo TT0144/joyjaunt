@@ -1,0 +1,8 @@
+__pycache__/
+db_data/
+migrations/
+instance/
+*.pyc
+*.pyo
+*.log
+venv/
