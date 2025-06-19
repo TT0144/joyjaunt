@@ -1,0 +1,164 @@
+.happ-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    min-height: 100vh; /* 确保页面高度 */
+    background-color: rgb(243, 244, 246);
+  }
+.h-container {
+    align-items: flex-start; /* 垂直对齐到顶部 */
+    display: flex;
+    background-color: rgb(240, 240, 216);
+    min-height: 100vh;
+    flex-direction: column;
+    
+}
+
+.card {
+    display: flex;
+    max-width: 32rem;
+    width: 100%;
+    background-color: rgb(240, 240, 216);
+    overflow: hidden;
+    
+    flex-direction: column;
+    justify-content: center;
+}
+
+.card-1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgb(58, 223, 102);
+    color: white;
+    padding: 0.5rem ;
+    margin: 10px;
+    border-radius: 1em;
+    flex-direction: row-reverse;
+}
+
+.card-1Text {
+    font-size: 3rem;
+    font-weight: bold;
+    margin: 0 10px;
+}
+
+.weatherInfo {
+    display: flex;
+    justify-content: space-around;
+    background-color: #92CDEA;
+    text-align: center;
+    padding: 1rem 0;
+    margin: 10px;
+    border-radius: 1em;
+}
+
+.cityName {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+.cityRegion {
+    font-size: 1.25rem;
+    color: #FFFFFF;
+}
+
+.temperature {
+    font-size: 5rem;
+    font-weight: bold;
+    color: #FFFFFF;
+}
+
+.weatherIcon {
+    font-size: 3rem; /* テキストサイズは不要なら削除 */
+    color: #FBBF24; /* テキスト色、必要に応じて残す */
+    margin-top: 1rem;
+    width: 150px; /* 幅を指定 */
+    height: 150px; /* 高さを指定 */
+    object-fit: cover; /* 必要に応じて「cover」や「contain」で画像の表示方法を調整 */
+}
+
+.dateText {
+    font-size: 0.875rem;
+    color: #6B7280;
+}
+
+.details {
+    padding: 10px 10px 50px 10px;
+    font-size: 0.875rem;
+    color: #374151;
+    margin: 10px;
+    background-color: rgb(255, 255, 255);
+    border-radius: 1em;
+    word-wrap: normal;
+    overflow-wrap: break-word;
+    overflow: hidden; /* 隱藏溢出 */
+    text-overflow: ellipsis; /* 超出部分加省略號 */
+    white-space: normal; /* 啟用多行顯示 */
+}
+
+.detailsParagraph {
+    margin-bottom: 1rem;
+}
+
+.greenText {
+    color: #10B981;
+    font-weight: bold;
+}
+
+.redText {
+    color: red;
+    font-weight: bold;
+}
+
+.link {
+    color: #f2f2f200;
+    text-decoration: underline;
+    border-radius: 2em;
+    display: flex;
+    justify-content: space-around;
+}
+.en-link{
+    color: #5779df;
+    justify-content: space-around;
+}
+.tp-link{
+    color: #5779df;
+    justify-content: space-around;
+}
+.footer-box {
+    display: flex;
+        flex-direction: column;
+}
+footer {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #f0f0dd;
+    position: fixed;
+    bottom:0;
+}
+
+.footerIcon {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+@media (min-width: 512px) {
+    footer{
+        max-width: 512px;
+        min-width: 512px;
+    }
+}
+@media (max-width: 415px) {
+    .happ-container{
+    display: contents;}
+
+    .temperature{
+        font-size: 3rem;
+    }
+    }

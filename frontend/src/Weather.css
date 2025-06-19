@@ -1,0 +1,210 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  .app-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    min-height: 100vh; /* 确保页面高度 */
+    background-color: #b3e5fc;
+  }
+  .container {
+    max-width: 412px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+  
+  }
+  .box2{
+    width: 100%; /* 宽度为父级容器的100% */
+    max-width: 500px; /* 限制最大宽度 */
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 20px auto; /* 添加自动的水平居中和垂直间距 */
+    text-align: center;
+  }
+  .box2-2{
+    margin: 20px auto;
+    display: flex;
+  }
+  
+  .header {
+    display: flex; /* 使用 flexbox */
+    align-items: center; /* 垂直方向置中 */
+    justify-content: center; /* 子項目從左至右排列 */
+    background-color: #b3e5fc;
+    padding: 20px;
+    gap: 20px; /* 控制 .location 和 .icon 間的間距 */
+  }
+  
+  .location {
+    display: flex;
+    flex-direction: column; /* 地點與溫度垂直排列 */
+    align-items: flex-end;
+  }
+  
+  .location h1 {
+    font-size: 24px;
+    margin: 0;
+    text-shadow: rgba(96, 95, 95, 0.505) 0.1em 0.1em 0.2em
+  }
+  
+  .location .temp {
+    font-size: 24px;
+    margin-top: 5px;
+    color: white;
+    text-shadow: rgba(96, 95, 95, 0.505) 0.1em 0.1em 0.1em
+  }
+  
+  .icon {
+    font-size: 100px;
+  }
+  
+  
+  
+  .header h1 {
+    font-size: 30px;
+    color: white;
+  }
+  
+  .header p {
+    font-size: 16px;
+    margin-top: 8px;
+  }
+  
+  .temperature {
+    margin: 20px 0;
+  }
+  
+  .temperature .icon {
+    font-size: 24px;
+  }
+  
+  .temperature .temp {
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  .forecast,
+  .forecast-icons,
+  .forecast-temp {
+    display: flex;
+    justify-content: space-around;
+    margin: 10px 0;
+  }
+  
+  .forecast-icons img {
+    width: 30px; /* アイコンの幅を小さく設定 */
+    height: 30px; /* アイコンの高さも小さく設定 */
+  }
+  .clothing {
+    width: 100%;
+    border-radius: 10px;
+    margin: 20px 0;
+  }
+  
+  .clothing h2 {
+    font-size: 12px;
+  }
+  
+  .clothing-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+  }
+  
+  .clothing-box img {
+    height: 80%;
+    height: auto;
+  }
+  
+  .map {
+    height: 80%;
+    border-radius: 10px;
+    margin: 20px 0;
+  }
+  
+  .map img {
+    width: 80%;
+    border-radius: 10px;
+  }
+  
+  .back-button {
+    width: 30%;
+    margin: 10px;
+    padding: 5px;
+    font-size: 16px;
+    background-color: #b3e5fc;
+    color: rgb(255, 255, 255);
+    border: none;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    text-shadow: rgba(96, 95, 95, 0.505) 0.1em 0.1em 0.1em
+  }
+  
+  .back-button:hover {
+    background-color: #e2e2e28e;
+  }
+  
+  @media (max-width: 480px) {
+    .header h1 {
+      font-size: 30px;
+    }
+    .location .temp {
+      font-size: 50px;
+      
+  }
+  }
+  @media (min-width: 768px) { /* 针对较宽的屏幕 */
+    .container {
+      max-width: 60%;
+      flex-direction: row; /* 设置为横向布局 */
+      justify-content: space-around; /* 子项之间的间距 */
+      align-items: flex-start; /* 垂直对齐到顶部 */
+      padding: 20px; /* 添加一些内边距 */
+    }
+  
+    .header {
+      width: 60%; /* 左侧占40%宽度 */
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: flex-start; /* 内容左对齐 */
+      text-align: left;
+    }
+  
+    .box2 {
+      width: 100%; /* 右侧占55%宽度 */
+      max-width: none; /* 移除手机端的最大宽度限制 */
+      height: auto; /* 高度自适应内容 */
+      margin: 0; /* 移除垂直居中的样式 */
+      padding: 15px;
+    }
+    .location {
+      display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+  }
+  .box2-2{
+    margin: 10px auto;
+    display: flex;
+  }
+  .back-button {
+    width: 30%;
+    padding: 5px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+  }
+  

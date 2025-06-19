@@ -1,0 +1,82 @@
+/* style.css */
+
+/* Reset box-sizing and basic margin/padding for all elements */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+ 
+/* Set body styles */
+html, body {
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  overflow-y: auto; /* 縦スクロールを有効化 */
+  height: 100%;
+  font-family: Arial, sans-serif;
+}
+ 
+/* Body container setup */
+.beach {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f2f2f200;
+  background-image: url('./image/desktop-1.svg');
+  background-size: 100% auto; /* 幅を100%に合わせて高さを調整 */
+  background-repeat: no-repeat;
+  background-position: center; /* 背景を中央に配置 */
+}
+ 
+/* Box container setup */
+.bigbox {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  overflow: auto; /* スクロールを有効にする */
+}
+ 
+/* Box styles */
+.box {
+  background-color: #ffffff7e;
+  width: 398px; /* 固定幅 */
+  min-height: 120vh; /* 最低限の高さ */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  overflow-y: auto; /* コンテンツが増えた場合スクロール可能 */
+}
+ 
+@media (max-width: 1024px) {
+  .box {
+    padding: -20px;
+    width: 600px;
+  }
+}
+
+@media (max-width: 820px) {
+  .box {
+    padding: -20px;
+    width: 600px;
+  }
+}
+
+@media (max-width: 415px) {
+  .box {
+    padding: -20px;
+  }
+}
+
+@media (max-width: 300px) {
+  .box {
+    padding: -20px;
+  }
+}
+
+@media (min-width: 768px) {
+  .box {
+    width: 600px;
+  }
+}

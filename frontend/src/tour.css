@@ -1,0 +1,123 @@
+/* tour.css */
+
+/* Divider line */
+.divider .custom-hr {
+    border: none;
+    border-top: 1px solid #000000;
+    margin: 25px 0;
+}
+
+/* Location section layout */
+.location-section {
+    display: flex;
+    flex-direction: column; /* 縦並びにする */
+    gap: 20px; /* 各「From」-「To」間の余白 */
+    width: 100%; /* 必要に応じて幅を調整 */
+    overflow-y: auto; /* スクロールを有効にする */
+}
+
+/* Inputs group styling */
+.inputs-below {
+    display: flex;
+    flex-direction: column; /* 入力フィールドを縦に配置 */
+    gap: 10px; /* フィールド間のスペースを調整 */
+    margin-bottom: 20px; /* 全体の余白を調整 */
+    flex-grow: 1; /* コンテンツが増えても親要素の高さを埋める */
+}
+
+.inputs-below .input {
+    display: flex;
+    align-items: center; /* アイコンと入力欄を揃える */
+    justify-content: flex-start;
+    width: 100%; /* 入力フィールドを親要素に合わせる */
+    max-width: 420px; /* 必要なら幅を制限 */
+    background: #ffffff;
+    border-radius: 6px; /* 円角調整 */
+    padding-left: 20px; /* 左側のスペース */
+    height: 50px; /* 一貫性を保つ高さ */
+}
+
+
+/* Label adjustments */
+.inputs-below .label {
+    font-size: 16px; /* ラベルのフォントサイズを調整 */
+    margin-bottom: 5px; /* ラベルと入力フィールドの間のスペース */
+}
+
+/* Add button adjustments */
+.add-input {
+    display: flex;
+    justify-content: center; /* ボタンを中央配置 */
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+
+.add {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.add img {
+    width: 25px; /* ボタンアイコンのサイズ */
+    height: 25px;
+}
+
+/* Submit button styling */
+.submit-container {
+    display: flex;
+    margin-top: 20px;
+    flex-direction: column;
+}
+
+.submit {
+    background-color: #000000;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    margin:10px 0;
+}
+
+.submit:hover {
+    background-color: #0056b3;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .inputs-below .input {
+        max-width: 100%; /* モバイル向けに幅を最大化 */
+    }
+
+    .inputs-below .label {
+        font-size: 14px; /* フォントサイズを少し小さく */
+    }
+
+    .add img {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+@media (max-width: 415px) {
+    .inputs-below .input {
+        padding-left: 10px; /* モバイル向けにパディングを減少 */
+    }
+
+    .inputs-below .label {
+        font-size: 12px;
+    }
+
+    .add img {
+        width: 15px;
+        height: 15px;
+    }
+
+    .submit {
+        font-size: 14px;
+        padding: 10px 15px;
+    }
+}

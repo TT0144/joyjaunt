@@ -1,0 +1,72 @@
+.summary-container {
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+}
+
+.summary-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.summary-container p {
+    margin: 10px 0;
+}
+
+.summary-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.summary-actions button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.summary-actions button:hover {
+    background-color: #ddd;
+}
+
+@media (max-width: 415px) {
+    .summary-container {
+        max-width: 90%; /* Use most of the screen width for smaller devices */
+        margin: 20px auto; /* Reduce vertical margin */
+        padding: 15px; /* Compact padding */
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        background-color: #fff;
+    }
+
+    .summary-container h2 {
+        text-align: center;
+        margin-bottom: 15px; /* Reduce bottom margin */
+        font-size: 18px; /* Slightly smaller font */
+    }
+
+    .summary-container p {
+        margin: 5px 0; /* Compact paragraph spacing */
+        font-size: 14px; /* Smaller text for better fit */
+    }
+
+    .summary-actions {
+        display: flex;
+        flex-direction: column; /* Stack buttons vertically */
+        gap: 10px; /* Add spacing between buttons */
+        margin-top: 15px; /* Adjust top margin */
+    }
+
+    .summary-actions button {
+        padding: 10px; /* Maintain touch-friendly button size */
+        font-size: 14px; /* Smaller font for buttons */
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+}
+
