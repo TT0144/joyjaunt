@@ -1,0 +1,21 @@
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100vw;
+    background-color: #F0F0D8; 
+  }
+  
+  .loading-gif {
+    width: 170px; 
+    height: 330px;
+    margin-bottom: 20px;
+  }
+  
+  .loading-container p {
+    font-size: 1.2rem;
+    color: #555;
+  }
+  
