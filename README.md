@@ -103,13 +103,40 @@ REACT_APP_API_URL=http://localhost:5000
 
 ### 4. Dockerでアプリケーションを起動
 
-```bash
-# コンテナのビルドと起動
-docker-compose up --build
+#### ⚡ クイックスタート（推奨）
 
-# バックグラウンドで起動する場合
-docker-compose up -d --build
+```powershell
+# PowerShellスクリプトで高速起動
+.\docker-start.ps1
 ```
+
+起動オプション:
+- **[1] 高速起動** - キャッシュ利用で10-30秒で起動 (推奨)
+- **[2] クリーンビルド** - 依存関係変更時に使用 (1-2分)
+- **[3] 停止のみ** - コンテナを停止
+- **[4] システムクリーンアップ** - 完全リセット
+
+#### 📝 従来の方法
+
+```bash
+# 高速起動（キャッシュ利用）
+docker-compose up -d --build
+
+# クリーンビルド（初回または依存関係変更時）
+docker-compose down -v
+docker-compose build --no-cache
+docker-compose up -d
+```
+
+#### 🎯 起動時間の目安
+
+| 起動方法 | 所要時間 | 使用タイミング |
+|---------|---------|--------------|
+| 高速起動 | 10-30秒 | 通常の開発作業 |
+| クリーンビルド | 1-2分 | 依存関係の変更後 |
+| 初回ビルド | 1-2分 | プロジェクト初回セットアップ |
+
+💡 **最適化の詳細**: [DOCKER_OPTIMIZATION.md](DOCKER_OPTIMIZATION.md) を参照
 
 ### 5. データベースの初期化
 
