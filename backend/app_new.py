@@ -1,15 +1,13 @@
 """
 JoyJaunt バックエンドアプリケーション エントリーポイント
 
-モジュール化されたBlueprint構造により、コードを機能別に分離:
+モジュール化されたBlueprint構造:
 - app/__init__.py: アプリケーションファクトリ
-- app/config.py: 環境別設定管理
+- app/config.py: 設定管理
 - app/extensions.py: Flask拡張機能
-- app/models/: データベースモデル (User, Country, City)
-- app/routes/: APIエンドポイント (auth, location, weather, news, danger)
-- app/services/: ビジネスロジック (天気、ニュース、危険度計算)
-
-旧バージョン(962行)は app_old_backup.py として保存されています。
+- app/models/: データベースモデル
+- app/routes/: エンドポイント(Blueprint)
+- app/services/: ビジネスロジック
 """
 import os
 from dotenv import load_dotenv

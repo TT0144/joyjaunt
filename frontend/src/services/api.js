@@ -105,77 +105,86 @@ export const apiDelete = (endpoint) => {
  * 国一覧を取得
  */
 export const getCountries = () => {
-  return apiGet("/countries");
+  return apiGet("/api/location/countries");
 };
 
 /**
  * 国別の都市一覧を取得
  */
 export const getCitiesByCountry = (countryCode) => {
-  return apiGet("/get_cities_by_country", { country_code: countryCode });
+  return apiGet("/api/location/cities", { country_code: countryCode });
 };
 
 /**
  * 国別の都市詳細を取得
  */
 export const getCityDetailsByCountry = (countryCode) => {
-  return apiGet(`/get_city_by_country/${countryCode}`);
+  return apiGet(`/api/location/cities/${countryCode}`);
 };
 
 /**
  * リアルタイム危険度チェック
  */
 export const checkRealtimeDanger = (country, city) => {
-  return apiPost("/check_realtime_danger", { country, city });
+  return apiPost("/api/danger/check_realtime_danger", { country, city });
+};
+
+/**
+ * 位置情報ベース危険度チェック
+ * @param {number} latitude - 緯度
+ * @param {number} longitude - 経度
+ */
+export const checkDangerByLocation = (latitude, longitude) => {
+  return apiPost("/api/danger/check_danger_by_location", { latitude, longitude });
 };
 
 /**
  * 場所別ニュース取得
  */
 export const getLocationNews = (country, city) => {
-  return apiPost("/get_location_news", { country, city });
+  return apiPost("/api/news/location_news", { country, city });
 };
 
 /**
  * 総合旅行情報取得
  */
 export const getTravelInfo = (country, city) => {
-  return apiPost("/travel_info", { country, city });
+  return apiPost("/api/danger/travel_info", { country, city });
 };
 
 /**
- * 天気予報取得(POST)
+ * 天気予報取得(GET)
  */
 export const getWeatherForecast = (city) => {
-  return apiPost("/weather_forecast", { city });
+  return apiGet("/api/weather/weather_forecast", { city });
 };
 
 /**
  * 旅行計画用天気予報取得(GET)
  */
 export const getWeatherForTravelPlan = (city) => {
-  return apiGet("/weather_forecast_for_travel_plan", { city });
+  return apiGet("/api/weather/weather_forecast_for_travel_plan", { city });
 };
 
 /**
  * ユーザー登録
  */
 export const registerUser = (userData) => {
-  return apiPost("/register", userData);
+  return apiPost("/api/auth/register", userData);
 };
 
 /**
  * ログイン
  */
 export const loginUser = (credentials) => {
-  return apiPost("/login", credentials);
+  return apiPost("/api/auth/login", credentials);
 };
 
 /**
  * ユーザー情報取得(要認証)
  */
 export const getUserInfo = (token) => {
-  return apiFetch("/get_user_info", {
+  return apiFetch("/api/auth/user-info", {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -187,7 +196,7 @@ export const getUserInfo = (token) => {
  * トークン更新
  */
 export const refreshToken = (refreshToken) => {
-  return apiFetch("/refresh", {
+  return apiFetch("/api/auth/refresh", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${refreshToken}`,
@@ -206,6 +215,7 @@ const apiService = {
   getCitiesByCountry,
   getCityDetailsByCountry,
   checkRealtimeDanger,
+  checkDangerByLocation,
   getLocationNews,
   getTravelInfo,
   getWeatherForecast,
