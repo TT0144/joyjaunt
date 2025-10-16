@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import API_URL from './config';
 import './tour.css';
 import './LoginSignup.css';
 import './style.css';
@@ -30,9 +31,6 @@ const Tour = () => {
     const [selectedCity, setSelectedCity] = useState('');  // Add this state
     const [countryList, setCountryList] = useState([]);
     const navigate = useNavigate();
-
-    const API_URL = "http://10.108.0.4:5000";
-    
 
     // Fetch cities when country changes
 

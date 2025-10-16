@@ -1,44 +1,55 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, Blueprint, jsonify, request
 from flask_sqlalchemy import SQLAlchemy  # type: ignore
-from flask_bcrypt import Bcrypt  # type: ignore # パスワードのハッシュ化用
+from flask_bcrypt import Bcrypt  # type: ignore
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token  # type: ignore
 from flask_cors import CORS  # type: ignore
 import requests
-from datetime import datetime  # datetimeのインポート方法を修正
 from sqlalchemy.exc import SQLAlchemyError
 from flask_migrate import Migrate  # type: ignore
-from dotenv import load_dotenv  # python-dotenvをインポート
+from dotenv import load_dotenv
 import os
+import logging
 
 # .envファイルを読み込む
 load_dotenv()
 
+# ロギング設定
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__)
 auth_bp = Blueprint('auth', __name__)
-# 環境変数を使用
-app.config['JWT_SECRET_KEY'] = 'your_secret_key'
-app.config['JWT_TOKEN_LOCATION'] = ['headers']
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 300  # アクセストークンの有効期限
-app.config['JWT_REFRESH_TOKEN_EXPIRES'] = 86400  # リフレッシュトークンの有効期限
+
+# 環境変数から設定を読み込む
 app.config['JWT_SECRET_KEY'] = os.getenv(
     'JWT_SECRET_KEY', 'default_jwt_secret_key')
+app.config['JWT_TOKEN_LOCATION'] = ['headers']
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 300  # アクセストークンの有効期限(5分)
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = 86400  # リフレッシュトークンの有効期限(24時間)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://dbuser:ecc@db:3306/Joy'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 migrate = Migrate(app, db)
+
 # CORS設定を明示的に指定
 CORS(app, resources={
-     r"/*": {"origins": "http://localhost:3001"}}, supports_credentials=True)
+     r"/*": {"origins": ["http://localhost:3001", "http://localhost:3000"]}},
+     supports_credentials=True)
 
-# リフレッシュエンドポイント
+# API キーを環境変数から取得
 NEWS_API_KEY = os.getenv('NEWS_API_KEY')
 TRAVEL_ADVISORY_API_KEY = os.getenv('TRAVEL_ADVISORY_API_KEY')
 OPEN_WEATHER_API_KEY = os.getenv('OPEN_WEATHER_API_KEY')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+# API URL定数
+OPEN_WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/forecast"
+NEWS_API_URL = "https://newsapi.org/v2/everything"
 
 
 @app.route('/refresh', methods=['POST'])
@@ -248,30 +259,99 @@ def get_user_info():
         "cities": city_names  # 都市名のリストを追加
     }), 200
 
+
+def get_news_by_location(country_name, city_name=None):
+    """
+    指定された場所(国・都市)の危険に関するニュースを取得
+    過去1週間以内のニュースを検索
+    """
+    try:
+        today = datetime.now()
+        one_week_ago = today - timedelta(days=7)
+        from_date = one_week_ago.strftime('%Y-%m-%d')
+
+        # 検索キーワード: 犯罪、テロ、危険関連
+        keywords = 'crime OR terrorism OR violence OR attack OR murder OR assault'
+
+        # 都市が指定されている場合は都市名を含める
+        location_query = f'"{city_name}" AND "{country_name}"' if city_name else f'"{country_name}"'
+
+        # NewsAPIのパラメータ
+        params = {
+            'q': f'({keywords}) AND {location_query}',
+            'from': from_date,
+            'sortBy': 'publishedAt',
+            'language': 'en',
+            'pageSize': 10,
+            'apiKey': NEWS_API_KEY
+        }
+
+        logger.info(f"ニュース検索: {location_query}")
+        response = requests.get(NEWS_API_URL, params=params, timeout=10)
+
+        if response.status_code == 200:
+            data = response.json()
+            articles = data.get('articles', [])
+
+            # 記事を整形して返す
+            formatted_articles = []
+            for article in articles[:5]:  # 最大5件
+                formatted_articles.append({
+                    'title': article.get('title', ''),
+                    'description': article.get('description', ''),
+                    'url': article.get('url', ''),
+                    'publishedAt': article.get('publishedAt', ''),
+                    'source': article.get('source', {}).get('name', '')
+                })
+
+            return formatted_articles
+        else:
+            logger.warning(f"NewsAPI エラー: {response.status_code}")
+            return []
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"ニュース取得エラー: {str(e)}")
+        return []
+    except Exception as e:
+        logger.error(f"予期しないエラー: {str(e)}")
+        return []
+
+
+def calculate_danger_level(country_name, city_name=None):
+    """
+    危険度を総合的に判定
+    1. 静的な危険度スコア
+    2. リアルタイムニュース情報
+    を組み合わせて判定
+    """
+    # 基本スコアを取得
+    base_score = get_travel_advisory_score(country_name, city_name)
+
+    if base_score is None:
+        base_score = 2.5  # デフォルト値
+
+    # ニュース情報を取得
+    news_articles = get_news_by_location(country_name, city_name)
+
+    # ニュース件数に応じてスコアを調整
+    news_count = len(news_articles)
+    news_adjustment = min(news_count * 0.2, 1.0)  # 最大+1.0まで
+
+    # 最終スコアを計算
+    final_score = base_score + news_adjustment
+
+    return {
+        'score': round(final_score, 2),
+        'base_score': base_score,
+        'news_count': news_count,
+        'news_adjustment': round(news_adjustment, 2),
+        'is_dangerous': final_score >= 4.0,
+        'recent_news': news_articles
+    }
+
 # 保護されたエンドポイントの例
 
-# 指定された緯度経度周辺のニュースを取得し、危険度を判定する関数
-
-
-# def get_news_by_coordinates(lat, lon):
-#     today = datetime.now()
-#     one_week_ago = today - timedelta(days=1)
-#     from_date = one_week_ago.strftime('%Y-%m-%d')
-
-#     # NewsAPIのエンドポイントに必要なパラメータを指定してURLを構築
-#     url = (f'https://newsapi.org/v2/everything?q=("murder" OR "homicide" OR "terrorism" OR "assault ") '
-#            f'AND "iceland" &from={from_date}&apiKey={NEWS_API_KEY}')
-
-#     # NewsAPIにGETリクエストを送信してニュースを取得
-#     response = requests.get(url)
-
-#     if response.status_code == 200:
-#         data = response.json()
-#         return data.get('articles', [])
-#     else:
-#         return []
-
-# 現在地の危険度をチェックするエンドポイント
+# 旧バージョン(座標ベース)は削除 - Webアプリでは手動選択に統一
 
 
 # 一時的な危険度スコアデータ
@@ -790,6 +870,10 @@ def get_travel_advisory_score(country_name, city_name=None):
 
 @app.route('/check_realtime_danger', methods=['POST'])
 def check_realtime_danger():
+    """
+    リアルタイム危険度チェック
+    静的スコア + ニュース情報で総合判定
+    """
     try:
         data = request.json
         country_name = data.get('country', '').strip()
@@ -798,93 +882,55 @@ def check_realtime_danger():
         if not country_name:
             return jsonify({'error': 'Country name is required'}), 400
 
+        # 国の存在確認
         country = Country.query.filter_by(Name=country_name).first()
         if not country:
             return jsonify({'error': f'Country "{country_name}" not found'}), 404
 
-        # 都市ごとの危険度を取得
-        danger_score = get_travel_advisory_score(country_name, city_name)
-
-        if danger_score is None:
-            return jsonify({'error': 'No advisory info available'}), 500
-
-        # スコア4.0以上なら危険
-        is_dangerous = float(danger_score) > 4.0
+        # 総合的な危険度を計算
+        danger_info = calculate_danger_level(country_name, city_name)
 
         return jsonify({
-            'is_dangerous': is_dangerous,
-            'danger_score': danger_score,
+            'is_dangerous': danger_info['is_dangerous'],
+            'danger_score': danger_info['score'],
+            'base_score': danger_info['base_score'],
+            'news_count': danger_info['news_count'],
+            'news_adjustment': danger_info['news_adjustment'],
             'country': country_name,
-            'city': city_name if city_name else None
-        })
+            'city': city_name if city_name else None,
+            'recent_news': danger_info['recent_news']
+        }), 200
 
     except Exception as e:
+        logger.error(f"危険度チェックエラー: {str(e)}")
         return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
 
 
-# def get_travel_advisory_score(country_name):
-#     try:
-#         # APIリクエスト送信（国名を使用）
-#         url = f"{TRAVEL_ADVISORY_API_URL}?countryname={country_name}"
-#         print(f"APIリクエストURL: {url}")  # デバッグ用
-#         response = requests.get(url, timeout=30, verify=False)  # タイムアウトを30秒に延長
+@app.route('/get_location_news', methods=['POST'])
+def get_location_news():
+    """
+    指定された場所の最新ニュースを取得
+    """
+    try:
+        data = request.json
+        country_name = data.get('country', '').strip()
+        city_name = data.get('city', '').strip()
 
-#         # ステータスコードとレスポンス内容を確認
-#         print(f"ステータスコード: {response.status_code}")
-#         print(f"レスポンス内容: {response.text}")
+        if not country_name:
+            return jsonify({'error': 'Country name is required'}), 400
 
-#         response.raise_for_status()  # ステータスコードがエラーの場合は例外をスロー
+        news_articles = get_news_by_location(country_name, city_name)
 
-#         # JSONデータを取得
-#         data = response.json()
-#         country_data = None
+        return jsonify({
+            'country': country_name,
+            'city': city_name,
+            'news_count': len(news_articles),
+            'articles': news_articles
+        }), 200
 
-#         # すべての国データをループして国名が一致するかチェック
-#         for code, details in data.get('data', {}).items():
-#             if details.get('name', '').lower() == country_name.lower():
-#                 country_data = details
-#                 break
-
-#         if country_data and 'advisory' in country_data:
-#             return country_data['advisory']['score']
-#         else:
-#             return None  # データがない場合は None を返す
-
-#     except requests.exceptions.RequestException as e:
-#         print(f"リクエストエラー: {e}")
-#         raise Exception(f"APIリクエストに失敗しました: {str(e)}")  # 詳細なエラーメッセージを返す
-#     except Exception as e:
-#         print(f"予期しないエラー: {e}")
-#         raise Exception(f"予期しないエラー: {str(e)}")  # 詳細なエラーメッセージを返す
-
-
-# @app.route('/check_realtime_danger', methods=['POST'])
-# def check_realtime_danger():
-#     try:
-#         # リクエストデータを取得
-#         data = request.json
-#         country_name = data.get('country', '').strip()
-
-#         if not country_name:
-#             return jsonify({'error': 'Country name is required'}), 400
-
-#         # Travel Advisory APIのスコアを取得（国名を使用）
-#         danger_score = get_travel_advisory_score(country_name)
-
-#         if danger_score is None:
-#             return jsonify({'error': 'Could not fetch travel advisory information'}), 500
-
-#         # 危険判定
-#         is_dangerous = float(danger_score) > 4.0
-
-#         return jsonify({
-#             'is_dangerous': is_dangerous,
-#             'danger_score': danger_score,
-#             'country': country_name
-#         })
-
-#     except Exception as e:
-#         return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
+    except Exception as e:
+        logger.error(f"ニュース取得エラー: {str(e)}")
+        return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
 
 
 def get_weather_forecast(city_name):
@@ -895,7 +941,7 @@ def get_weather_forecast(city_name):
             "appid": OPEN_WEATHER_API_KEY,
             "units": "metric",
             "lang": "ja",
-            "cnt": 40  # 最大40件（5日分、3時間ごとのデータ）
+            "cnt": 40  # 最大40件(5日分、3時間ごとのデータ)
         }
         response = requests.get(OPEN_WEATHER_API_URL, params=params)
         if response.status_code == 200:
@@ -976,66 +1022,71 @@ def weather_forecast_for_travel_plan():
     """旅行計画のための天気予報を取得"""
     try:
         city = request.args.get('city', default='Tokyo', type=str)
-        print("クライアントからのリクエスト - 都市:", city)  # デバッグログ
+        logger.info(f"天気予報リクエスト - 都市: {city}")
+
         forecast_data = get_weather_forecast(city)
 
         if not forecast_data:
-            print("天気データが空です:", forecast_data)  # デバッグログ
+            logger.warning(f"天気データが取得できませんでした: {city}")
             return jsonify({"error": "Could not fetch weather forecast"}), 500
 
-        print("取得した天気予報:", forecast_data)  # デバッグログ
+        logger.info(f"天気予報取得成功: {city}, {len(forecast_data)}日分")
         return jsonify({"forecast": forecast_data}), 200
+
     except Exception as e:
-        print("サーバーエラー:", str(e))  # デバッグログ
+        logger.error(f"天気予報エラー: {str(e)}")
         return jsonify({"error": "An error occurred", "details": str(e)}), 500
 
 
-@app.route('/get_advisory', methods=['POST'])
-def get_advisory():
-    data = request.get_json()
-    country = data.get('country', '')
-    city = data.get('city', '')
-
-    if not country or not city:
-        return jsonify({'error': '国名と都市名が必要です'}), 400
-
+@app.route('/travel_info', methods=['POST'])
+def get_travel_info():
+    """
+    総合的な旅行情報を取得
+    危険度、天気予報、ニュースをまとめて返す
+    """
     try:
-        # Travel Advisory APIへのリクエストを実行
-        response = requests.get(
-            f'https://api.travel-advisory.com/v1/advisory?country={country}&city={city}')
+        data = request.json
+        country_name = data.get('country', '').strip()
+        city_name = data.get('city', '').strip()
 
-        # APIレスポンスのチェック
-        response.raise_for_status()  # ステータスコードが200番台でない場合に例外を発生させる
+        if not country_name:
+            return jsonify({'error': 'Country name is required'}), 400
 
-        api_data = response.json()
+        # 危険度情報を取得
+        danger_info = calculate_danger_level(country_name, city_name)
 
-        # レスポンスデータをチェックして必要な情報を抽出
-        advisory = api_data.get('advisory', {})
-        if not advisory:
-            return jsonify({'error': 'Advisory data is missing'}), 500
-
-        weather = advisory.get('weather', {})
-        temperature = weather.get('temperature', 'N/A')
-        humidity = weather.get('humidity', 'N/A')
-        description = weather.get('description', 'N/A')
-        recommendation = advisory.get('recommendation', 'N/A')
+        # 天気予報を取得
+        weather_data = None
+        if city_name:
+            weather_data = get_weather_forecast(city_name)
 
         return jsonify({
-            'temperature': temperature,
-            'humidity': humidity,
-            'description': description,
-            'recommendation': recommendation
-        })
+            'country': country_name,
+            'city': city_name,
+            'danger': {
+                'is_dangerous': danger_info['is_dangerous'],
+                'score': danger_info['score'],
+                'base_score': danger_info['base_score'],
+                'news_count': danger_info['news_count']
+            },
+            'weather': weather_data,
+            'recent_news': danger_info['recent_news'][:3]  # 最新3件のみ
+        }), 200
 
-    except requests.exceptions.RequestException as e:
-        return jsonify({'error': f'APIリクエストの失敗: {str(e)}'}), 500
     except Exception as e:
-        return jsonify({'error': f'予期しないエラー: {str(e)}'}), 500
+        logger.error(f"旅行情報取得エラー: {str(e)}")
+        return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
 
 
 @app.route('/protected', methods=['GET'])
+@jwt_required()
 def protected():
-    return jsonify({"message": "Access granted to protected route"}), 200
+    """保護されたエンドポイント例"""
+    current_user = get_jwt_identity()
+    return jsonify({
+        "message": "Access granted to protected route",
+        "user": current_user
+    }), 200
 
 
 if __name__ == '__main__':

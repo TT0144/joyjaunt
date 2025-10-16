@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPin } from "lucide-react";
 import Loading from "./Loading";
+import API_URL from "./config";
 import "./home.css";
 
 // 各画像のインポート
@@ -33,8 +34,6 @@ function Home() {
 
   console.log(visaStatus);
   console.log(passportStatus);
-
-  const API_URL = "http://10.108.0.4:5000";
 
   // パスポートの有効期限チェック
   const checkPassportValidity = (expiryDate) => {

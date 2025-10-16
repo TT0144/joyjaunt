@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import API_URL from './config';
 import './LoginSignup.css';
 import './style.css';
 
@@ -17,8 +18,6 @@ const componentStyle = {
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'center',
 };
-
-const API_URL = "http://10.108.0.4:5000";
 
 const LoginSignup = () => {
     const navigate = useNavigate();

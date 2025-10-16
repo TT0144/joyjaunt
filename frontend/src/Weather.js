@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import API_URL from "./config";
 import "./Weather.css";
 import mapImage from "./image/map.png";
 import cortImage from "./image/cort.png";
@@ -6,7 +8,6 @@ import jucketImage from "./image/jucket.png";
 import longTImage from "./image/long-T.png";
 import shortTImage from "./image/short-T.png";
 
-import { useNavigate, useLocation } from "react-router-dom";
 import clearImage from "./image/clear.png";
 import rainImage from "./image/rain.png";
 import showerrainImage from "./image/showerrain.png";
@@ -25,8 +26,6 @@ const Weather = () => {
   const [error, setError] = useState(null);
   const [countryName, setCountryName] = useState("");
   const [cityName, setCityName] = useState("");
-
-  const API_URL = "http://10.108.0.4:5000";
 
   useEffect(() => {
     const storedCountryName = localStorage.getItem("selectedCountryName");
