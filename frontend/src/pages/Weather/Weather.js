@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { getWeatherForecast } from "./services/api";
-import ErrorMessage from "./components/ErrorMessage";
+import { getWeatherForecast } from "../../services/api";
+import ErrorMessage from "../../components/common/ErrorMessage";
 import "./Weather.css";
-import cortImage from "./image/cort.png";
-import jucketImage from "./image/jucket.png";
-import longTImage from "./image/long-T.png";
-import shortTImage from "./image/short-T.png";
+import cortImage from "../../assets/images/cort.png";
+import jucketImage from "../../assets/images/jucket.png";
+import longTImage from "../../assets/images/long-T.png";
+import shortTImage from "../../assets/images/short-T.png";
 
-import clearImage from "./image/clear.png";
-import rainImage from "./image/rain.png";
-import snowImage from "./image/snow.png";
-import cloudImage from "./image/cloud.png";
-import mistImage from "./image/mist.png";
+import clearImage from "../../assets/images/clear.png";
+import rainImage from "../../assets/images/rain.png";
+import snowImage from "../../assets/images/snow.png";
+import cloudImage from "../../assets/images/cloud.png";
+import mistImage from "../../assets/images/mist.png";
 
 const Weather = () => {
   const navigate = useNavigate();

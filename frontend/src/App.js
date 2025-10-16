@@ -1,17 +1,17 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Navigation from "./components/Navigation";
-import Home from "./Home";
-import Danger from "./Dang";
-import Safety from "./Safe";
-import Warning from "./Warning";
-import Weather from "./Weather";
-import LoginSignup from "./LoginSignup";
-import AccountSummary from "./AccountSummary";
-import Tour from "./tour";
+import Navigation from "./components/common/Navigation";
+import Home from "./pages/Home";
+import Danger from "./pages/Danger";
+import Safety from "./pages/Safe";
+import Warning from "./pages/Warning";
+import Weather from "./pages/Weather";
+import LoginSignup from "./pages/Auth";
+import AccountSummary from "./pages/Account";
+import Tour from "./pages/Tour";
 import Setting from "./Setting";
-import NotFound from "./NotFound";
-import "./index.css";
+import NotFound from "./pages/NotFound";
+import "./styles/index.css";
 
 function App() {
   return (

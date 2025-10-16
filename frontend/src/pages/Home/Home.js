@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPin } from "lucide-react";
-import Loading from "./Loading";
-import ErrorMessage from "./components/ErrorMessage";
+import Loading from "../../components/common/Loading";
+import ErrorMessage from "../../components/common/ErrorMessage";
 import {
   checkRealtimeDanger,
   getCityByCountry,
   getWeatherByCity,
-} from "./services/api";
+} from "../../services/api";
 import "./home.css";
 
 // 各画像のインポート
-import clearImage from "./image/clear.png";
-import rainImage from "./image/rain.png";
-import snowImage from "./image/snow.png";
-import cloudImage from "./image/cloud.png";
-import mistImage from "./image/mist.png";
+import clearImage from "../../assets/images/clear.png";
+import rainImage from "../../assets/images/rain.png";
+import snowImage from "../../assets/images/snow.png";
+import cloudImage from "../../assets/images/cloud.png";
+import mistImage from "../../assets/images/mist.png";
 
 function Home() {
   const navigate = useNavigate();

@@ -2,16 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { getCountries, login, register } from './services/api';
-import ErrorMessage from './components/ErrorMessage';
+import { getCountries, login, register } from '../../services/api';
+import ErrorMessage from '../../components/common/ErrorMessage';
 import './LoginSignup.css';
-import './style.css';
+import '../../styles/style.css';
 
-import email_icon from './image/email.png';
-import password_icon from './image/password.png';
-import globe_icon from './image/globe.svg';
-import date_icon from './image/calendar.svg';
-import desktopImage from './image/desktop-1.svg';
+import email_icon from '../../assets/images/email.png';
+import password_icon from '../../assets/images/password.png';
+import globe_icon from '../../assets/images/globe.svg';
+import date_icon from '../../assets/images/calendar.svg';
+import desktopImage from '../../assets/images/desktop-1.svg';
 
 const componentStyle = {
     backgroundImage: `url(${desktopImage})`,
