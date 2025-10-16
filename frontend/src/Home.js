@@ -1,17 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPin } from "lucide-react";
 import Loading from "./Loading";
-import API_URL from "./config";
+import ErrorMessage from "./components/ErrorMessage";
+import {
+  checkRealtimeDanger,
+  getCityByCountry,
+  getWeatherByCity,
+} from "./services/api";
 import "./home.css";
 
 // 各画像のインポート
 import clearImage from "./image/clear.png";
 import rainImage from "./image/rain.png";
-import showerrainImage from "./image/showerrain.png";
 import snowImage from "./image/snow.png";
 import cloudImage from "./image/cloud.png";
-import thunderstormImage from "./image/thunderstorm.png";
 import mistImage from "./image/mist.png";
 
 function Home() {
@@ -21,8 +24,8 @@ function Home() {
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedCountryName, setSelectedCountryName] = useState("");
   const [city, setCity] = useState("");
-  const [dangerStatus, setDangerStatus] = useState("判定中"); // 初期値: 判定中
-  const [isDangerous, setIsDangerous] = useState(false);
+  const [dangerStatus, setDangerStatus] = useState("判定中");
+  const [error, setError] = useState(null);
   const [passportStatus, setPassportStatus] = useState({
     isValid: true,
     message: "OK",
@@ -36,7 +39,7 @@ function Home() {
   console.log(passportStatus);
 
   // パスポートの有効期限チェック
-  const checkPassportValidity = (expiryDate) => {
+  const checkPassportValidity = useCallback((expiryDate) => {
     if (!expiryDate)
       return { isValid: false, message: "NG パスポート情報がありません" };
 
@@ -60,11 +63,11 @@ function Home() {
       isValid: true,
       message: "OK",
     };
-  };
+  }, []);
 
   // ビザ要件チェック
-  const checkVisaRequirements = (countryCode) => {
-    const visaExemptCountries = selectedCountry;
+  const checkVisaRequirements = useCallback((countryCode) => {
+    const visaExemptCountries = countryCode;
 
     if (visaExemptCountries.includes(countryCode)) {
       return {
@@ -76,50 +79,36 @@ function Home() {
       isValid: false,
       message: "NG ビザの取得が必要です",
     };
-  };
+  }, []);
 
-  const getDangerScore = async () => {
+  const getDangerScore = useCallback(async () => {
     try {
       setDangerStatus("判定中...");
-      const response = await fetch(`${API_URL}/check_realtime_danger`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          country: selectedCountryName,
-          city: city, // 都市名を送信
-        }),
-      });
-      const data = await response.json();
-
-      if (data.error) {
-        console.error("危険度スコア取得エラー:", data.error);
-        setDangerStatus("不明");
-      } else {
-        setIsDangerous(data.is_dangerous);
-        setDangerStatus(data.is_dangerous ? "危険" : "安全");
-      }
+      setError(null);
+      const data = await checkRealtimeDanger(selectedCountryName, city);
+      setDangerStatus(data.is_dangerous ? "危険" : "安全");
     } catch (error) {
       console.error("危険度スコアの取得エラー:", error);
       setDangerStatus("不明");
+      setError(error.message);
     }
-  };
+  }, [selectedCountryName, city]);
 
   const fetchWeatherData = async (city) => {
     try {
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=c51c6c707813c10395db9f282261d2f4&units=metric&lang=ja`
-      );
-      const data = await response.json();
+      setError(null);
+      const data = await getWeatherByCity(city);
       setWeatherData(data);
     } catch (error) {
       console.error("天気データの取得エラー:", error);
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    const country = localStorage.getItem("selectedCountry") || "JP"; // デフォルト値を設定
+    const country = localStorage.getItem("selectedCountry") || "JP";
     const countryName = localStorage.getItem("selectedCountryName") || "Japan";
     const savedCity = localStorage.getItem("selectedCity") || "Tokyo";
     const passportExpiry = localStorage.getItem("passportExpiry");
@@ -130,34 +119,37 @@ function Home() {
       countryName,
       savedCity,
       passportExpiry
-    ); // デバッグ用
+    );
 
     setSelectedCountry(country);
     setSelectedCountryName(countryName);
     setCity(savedCity);
 
-    // パスポートとビザの状態を更新
     setPassportStatus(checkPassportValidity(passportExpiry));
     setVisaStatus(checkVisaRequirements(country));
     localStorage.setItem("passportExpiry", "2025-11-01");
-  }, []);
+  }, [checkPassportValidity, checkVisaRequirements]);
 
   useEffect(() => {
-    if (selectedCountry) {
-      getDangerScore();
-      fetch(`${API_URL}/get_city_by_country/${selectedCountry}`)
-        .then((response) => response.json())
-        .then((data) => {
-          if (data && data.length > 0 && !city) {
-            setCity(data[0].Name);
-          }
-        })
-        .catch((error) => console.error("都市データ取得エラー:", error));
+    const loadCountryData = async () => {
+      if (!selectedCountry) return;
 
-      // 選択された国に応じてビザ要件を再確認
-      setVisaStatus(checkVisaRequirements(selectedCountry));
-    }
-  }, [selectedCountry]); // selectedCountry が変わった時のみ実行
+      try {
+        setError(null);
+        getDangerScore();
+        const cities = await getCityByCountry(selectedCountry);
+        if (cities && cities.length > 0 && !city) {
+          setCity(cities[0].Name);
+        }
+        setVisaStatus(checkVisaRequirements(selectedCountry));
+      } catch (error) {
+        console.error("都市データ取得エラー:", error);
+        setError(error.message);
+      }
+    };
+
+    loadCountryData();
+  }, [selectedCountry, checkVisaRequirements, city, getDangerScore]);
 
   useEffect(() => {
     if (city) {
@@ -202,6 +194,13 @@ function Home() {
   };
   return (
     <div className="App">
+      {error && (
+        <ErrorMessage
+          type="error"
+          message={error}
+          onClose={() => setError(null)}
+        />
+      )}
       {isLoading ? (
         <Loading />
       ) : (

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import API_URL from "./config";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { getWeatherForecast } from "./services/api";
+import ErrorMessage from "./components/ErrorMessage";
 import "./Weather.css";
-import mapImage from "./image/map.png";
 import cortImage from "./image/cort.png";
 import jucketImage from "./image/jucket.png";
 import longTImage from "./image/long-T.png";
@@ -10,15 +10,12 @@ import shortTImage from "./image/short-T.png";
 
 import clearImage from "./image/clear.png";
 import rainImage from "./image/rain.png";
-import showerrainImage from "./image/showerrain.png";
 import snowImage from "./image/snow.png";
 import cloudImage from "./image/cloud.png";
-import thunderstormImage from "./image/thunderstorm.png";
 import mistImage from "./image/mist.png";
 
 const Weather = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [weather, setWeather] = useState([]);
   const [clothingRecommendation, setClothingRecommendation] = useState("");
   const [clothingImage, setClothingImage] = useState(null);
@@ -27,12 +24,71 @@ const Weather = () => {
   const [countryName, setCountryName] = useState("");
   const [cityName, setCityName] = useState("");
 
+  const generateClothingRecommendation = useCallback((currentWeather) => {
+    const temperature = currentWeather.temperature;
+    const weatherCondition = currentWeather.weather;
+
+    let recommendation = "";
+    let clothingImg = null;
+
+    if (temperature > 25) {
+      recommendation = "Tシャツ、ショートパンツ";
+      clothingImg = shortTImage;
+    } else if (temperature >= 20) {
+      recommendation = "薄手の長袖シャツ、ジーンズ";
+      clothingImg = longTImage;
+    } else if (temperature >= 10) {
+      recommendation = "ジャケット、セーター";
+      clothingImg = jucketImage;
+    } else {
+      recommendation = "厚手のコート、防寒具";
+      clothingImg = cortImage;
+    }
+
+    if (weatherCondition.includes("雨")) {
+      recommendation += "、傘やレインコートも必要です";
+    }
+
+    setClothingRecommendation(recommendation);
+    setClothingImage(clothingImg);
+  }, []);
+
+  const fetchWeatherForTravelPlan = useCallback(
+    async (city) => {
+      setLoading(true);
+      setError(null);
+      try {
+        console.log("天気取得中の都市:", city);
+
+        const data = await getWeatherForecast(city);
+
+        if (
+          data.forecast &&
+          Array.isArray(data.forecast) &&
+          data.forecast.length > 0
+        ) {
+          setWeather(data.forecast);
+          generateClothingRecommendation(data.forecast[0]);
+        } else {
+          console.error("天気データが空です");
+          setError("有効な天気データがありません");
+        }
+      } catch (error) {
+        console.error("天気情報取得エラー:", error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [generateClothingRecommendation]
+  );
+
   useEffect(() => {
     const storedCountryName = localStorage.getItem("selectedCountryName");
     const storedCity = localStorage.getItem("selectedCity");
 
-    console.log("ローカルストレージから取得した国名:", storedCountryName); // デバッグログ
-    console.log("ローカルストレージから取得した都市名:", storedCity); // デバッグログ
+    console.log("ローカルストレージから取得した国名:", storedCountryName);
+    console.log("ローカルストレージから取得した都市名:", storedCity);
 
     setCountryName(storedCountryName || "");
     setCityName(storedCity || "");
@@ -42,7 +98,7 @@ const Weather = () => {
     } else {
       console.error("都市名が指定されていません！");
     }
-  }, []);
+  }, [fetchWeatherForTravelPlan]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -52,82 +108,7 @@ const Weather = () => {
     }
   }, [navigate]);
 
-  const fetchWeatherForTravelPlan = async (city) => {
-    setLoading(true);
-    try {
-      console.log("天気取得中の都市:", city); // デバッグログ
-
-      const response = await fetch(
-        `${API_URL}/weather_forecast_for_travel_plan?city=${city}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        console.error(
-          "APIレスポンスエラー:",
-          response.status,
-          response.statusText
-        ); // デバッグログ
-        throw new Error("天気データの取得に失敗しました");
-      }
-
-      const data = await response.json();
-
-      if (
-        data.forecast &&
-        Array.isArray(data.forecast) &&
-        data.forecast.length > 0
-      ) {
-        setWeather(data.forecast);
-        generateClothingRecommendation(data.forecast[0]);
-      } else {
-        console.error("天気データが空です"); // デバッグログ
-        setError("有効な天気データがありません");
-      }
-    } catch (error) {
-      console.error("天気情報取得エラー:", error); // デバッグログ
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const generateClothingRecommendation = (currentWeather) => {
-    const temperature = currentWeather.temperature;
-    const weatherCondition = currentWeather.weather;
-
-    let recommendation = "";
-    let clothingImage = null;
-
-    if (temperature > 25) {
-      recommendation = "Tシャツ、ショートパンツ";
-      clothingImage = shortTImage;
-    } else if (temperature >= 20) {
-      recommendation = "薄手の長袖シャツ、ジーンズ";
-      clothingImage = longTImage;
-    } else if (temperature >= 10) {
-      recommendation = "ジャケット、セーター";
-      clothingImage = jucketImage;
-    } else {
-      recommendation = "厚手のコート、防寒具";
-      clothingImage = cortImage;
-    }
-
-    if (weatherCondition.includes("雨")) {
-      recommendation += "、傘やレインコートも必要です";
-    }
-
-    setClothingRecommendation(recommendation);
-    setClothingImage(clothingImage); // 画像を設定
-  };
-
   const getWeatherImage = (weather) => {
-    // `weather` が undefined または null の場合、mistImage を返す
     if (!weather) return mistImage;
 
     // 天気情報に基づいて画像を返す
@@ -146,9 +127,15 @@ const Weather = () => {
 
   return (
     <div className="app-container">
+      {error && (
+        <ErrorMessage
+          type="error"
+          message={error}
+          onClose={() => setError(null)}
+        />
+      )}
       <div className="container">
         {loading && <p>読み込み中...</p>}
-        {error && <p className="error-message">{error}</p>}
 
         {weather.length > 0 && (
           <>

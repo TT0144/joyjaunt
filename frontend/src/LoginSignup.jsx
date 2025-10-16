@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import API_URL from './config';
+import { getCountries, login, register } from './services/api';
+import ErrorMessage from './components/ErrorMessage';
 import './LoginSignup.css';
 import './style.css';
 
@@ -27,19 +28,19 @@ const LoginSignup = () => {
     const [country, setCountry] = useState("JPN");
     const [date, setDate] = useState(null);
     const [message, setMessage] = useState("");
+    const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     const [countryList, setCountryList] = useState([]);
 
     useEffect(() => {
         const fetchCountries = async () => {
             try {
-                const response = await fetch(`${API_URL}/countries`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setCountryList(data);
-                }
+                setError(null);
+                const data = await getCountries();
+                setCountryList(data);
             } catch (error) {
                 console.error("エラーが発生しました:", error);
+                setError(error.message);
             }
         };
         fetchCountries();
@@ -72,59 +73,44 @@ const LoginSignup = () => {
     
         try {
             setLoading(true);
-            const endpoint = action === "Login" ? "/login" : "/register";
+            setError(null);
+            setMessage("");
+            
             const formattedDate = date ? date.toISOString().split("T")[0] : null;
-            const payload = action === "Login"
-                ? { email, password }
-                : { email, password, country_code: country, passport_expiry: formattedDate, language_no: "JPN" };
-    
-            const response = await fetch(`${API_URL}${endpoint}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-    
-            if (response.ok) {
-                const data = await response.json();
+            
+            if (action === "Login") {
+                const data = await login(email, password);
+                localStorage.setItem("token", data.access_token);
                 
-                if (action === "Login") {
-                    localStorage.setItem("token", data.access_token);
-                    
-                    // ユーザーの訪問履歴をチェック
-                    const hasCompletedSetup = localStorage.getItem(`user_${email}_completed_setup`);
-                    
-                    if (hasCompletedSetup === 'true') {
-                        // 2回目以降のログインの場合、直接ホームへ
-                        navigate('/', {
-                            state: {
-                                isLoggedIn: true,
-                                email: email,
-                                nationality: data.country || country,
-                                passportExpiry: data.passportExpiry
-                            }
-                        });
-                    } else {
-                        // 初回ログインの場合、アカウント確認画面へ
-                        navigate('/AccountSummary', {
-                            state: {
-                                email: email,
-                                password: password,
-                                nationality: data.country || country,
-                                passportExpiry: data.passportExpiry
-                            }
-                        });
-                    }
+                const hasCompletedSetup = localStorage.getItem(`user_${email}_completed_setup`);
+                
+                if (hasCompletedSetup === 'true') {
+                    navigate('/', {
+                        state: {
+                            isLoggedIn: true,
+                            email: email,
+                            nationality: data.country || country,
+                            passportExpiry: data.passportExpiry
+                        }
+                    });
                 } else {
-                    // 新規登録の場合
-                    alert('登録が完了しました！ログインしてください。');
-                    setAction("Login");
+                    navigate('/AccountSummary', {
+                        state: {
+                            email: email,
+                            password: password,
+                            nationality: data.country || country,
+                            passportExpiry: data.passportExpiry
+                        }
+                    });
                 }
             } else {
-                const errorData = await response.json().catch(() => ({ error: "サーバーエラー" }));
-                setMessage(`エラー: ${errorData.error || `${action === "Login" ? "ログイン" : "登録"}に失敗しました`}`);
+                await register(email, password, country, formattedDate, "JPN");
+                alert('登録が完了しました!ログインしてください。');
+                setAction("Login");
             }
         } catch (error) {
-            setMessage("予期しないエラーが発生しました。");
+            setMessage(`エラー: ${error.message}`);
+            setError(error.message);
             console.error("エラーが発生しました:", error);
         } finally {
             setLoading(false);
@@ -164,6 +150,13 @@ const LoginSignup = () => {
 
     return (
         <div className="bigbox" style={componentStyle}>
+            {error && (
+                <ErrorMessage
+                    type="error"
+                    message={error}
+                    onClose={() => setError(null)}
+                />
+            )}
             <div className="box">
                 <div className='container'>
                     <div className="header2">

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import API_URL from './config';
+import { getCountries, getCitiesByCountry, getWeatherForecast } from './services/api';
+import ErrorMessage from './components/ErrorMessage';
 import './tour.css';
 import './LoginSignup.css';
 import './style.css';
@@ -25,11 +26,11 @@ const Tour = () => {
     const [returnDate, setReturnDate] = useState(null);
     const [locations, setLocations] = useState([{ from: '', stopovers: [''], to: '' }]);
     const [selectedCountry, setSelectedCountry] = useState('JPN');
-    const [selectedCountryName, setSelectedCountryName] = useState('Japan');
     const [availableCities, setAvailableCities] = useState([]);
     const [weather, setWeather] = useState(null);
-    const [selectedCity, setSelectedCity] = useState('');  // Add this state
+    const [selectedCity, setSelectedCity] = useState('');
     const [countryList, setCountryList] = useState([]);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
     // Fetch cities when country changes
@@ -37,17 +38,13 @@ const Tour = () => {
     useEffect(() => {
         const fetchCountries = async () => {
             try {
-                const response = await fetch(`${API_URL}/countries`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch countries');
-                }
-                const data = await response.json();
-                // 国名で昇順にソート
-            const sortedCountries = data.sort((a, b) => a.name.localeCompare(b.name));
-
-            setCountryList(sortedCountries);
+                setError(null);
+                const data = await getCountries();
+                const sortedCountries = data.sort((a, b) => a.name.localeCompare(b.name));
+                setCountryList(sortedCountries);
             } catch (error) {
                 console.error('Error fetching country list:', error);
+                setError(error.message);
             }
         };
 
@@ -57,19 +54,14 @@ const Tour = () => {
     useEffect(() => {
         const fetchCities = async () => {
             try {
-                const response = await fetch(`${API_URL}/get_cities_by_country?country_code=${selectedCountry}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch cities');
-                }
-                const cities = await response.json();
-    
-                // 都市名で昇順にソート
+                setError(null);
+                const cities = await getCitiesByCountry(selectedCountry);
                 const sortedCities = cities.sort((a, b) => a.localeCompare(b));
-    
                 setAvailableCities(sortedCities);
             } catch (error) {
                 console.error('Error fetching cities:', error);
-                setAvailableCities([]); // Fetch失敗時は空にリセット
+                setError(error.message);
+                setAvailableCities([]);
             }
         };
     
@@ -90,25 +82,21 @@ const Tour = () => {
     useEffect(() => {
         const fetchWeather = async (city) => {
             try {
-                const response = await fetch(`${API_URL}/weather_forecast_for_travel_plan?city=${city}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setWeather(data.forecast); // 天気情報を更新
-                } else {
-                    console.error('Error fetching weather data');
-                    setWeather(null);
-                }
+                setError(null);
+                const data = await getWeatherForecast(city);
+                setWeather(data.forecast);
             } catch (error) {
                 console.error('Error fetching weather:', error);
+                setError(error.message);
                 setWeather(null);
             }
         };
 
         if (availableCities.length > 0) {
-            const defaultCity = availableCities[0]; // 最初の都市をデフォルトとして選択
-            fetchWeather(defaultCity); // 初期選択された都市の天気情報を取得
+            const defaultCity = availableCities[0];
+            fetchWeather(defaultCity);
         }
-    }, [availableCities]); // citiesが変更されるたびに天気情報を再取得
+    }, [availableCities]);
 
     const handleLocationChange = (index, field, value) => {
         const newLocations = [...locations];
@@ -181,6 +169,13 @@ const Tour = () => {
 
     return (
         <div className="bigbox" style={componentStyle}>
+            {error && (
+                <ErrorMessage
+                    type="error"
+                    message={error}
+                    onClose={() => setError(null)}
+                />
+            )}
             <div className="box">
                 <div className='container'>
                     <div className="header2">
