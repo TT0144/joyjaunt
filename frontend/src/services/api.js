@@ -135,7 +135,10 @@ export const checkRealtimeDanger = (country, city) => {
  * @param {number} longitude - 経度
  */
 export const checkDangerByLocation = (latitude, longitude) => {
-  return apiPost("/api/danger/check_danger_by_location", { latitude, longitude });
+  return apiPost("/api/danger/check_danger_by_location", {
+    latitude,
+    longitude,
+  });
 };
 
 /**

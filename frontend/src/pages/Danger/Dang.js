@@ -24,7 +24,7 @@ const Danger = () => {
         const { latitude, longitude } = position.coords;
         setLocation({ latitude, longitude });
         setLocationLoading(false);
-        
+
         // 自動的に危険度チェックを実行
         await checkDangerByCoordinates(latitude, longitude);
       },
@@ -32,7 +32,9 @@ const Danger = () => {
         setLocationLoading(false);
         switch (err.code) {
           case err.PERMISSION_DENIED:
-            setError("位置情報の取得が拒否されました。ブラウザの設定を確認してください。");
+            setError(
+              "位置情報の取得が拒否されました。ブラウザの設定を確認してください。"
+            );
             break;
           case err.POSITION_UNAVAILABLE:
             setError("位置情報が利用できません。");
@@ -47,7 +49,7 @@ const Danger = () => {
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 0
+        maximumAge: 0,
       }
     );
   };
@@ -66,7 +68,7 @@ const Danger = () => {
           latitude: data.location.lat,
           longitude: data.location.lon,
           city: data.location.city,
-          country: data.location.country
+          country: data.location.country,
         });
       }
 
@@ -86,10 +88,10 @@ const Danger = () => {
   return (
     <div style={{ padding: "20px", maxWidth: "600px", margin: "0 auto" }}>
       <h1>危険度チェック</h1>
-      
+
       <div style={{ marginBottom: "20px" }}>
-        <button 
-          onClick={getCurrentLocation} 
+        <button
+          onClick={getCurrentLocation}
           disabled={loading || locationLoading}
           style={{
             padding: "10px 20px",
@@ -98,38 +100,52 @@ const Danger = () => {
             backgroundColor: "#007bff",
             color: "white",
             border: "none",
-            borderRadius: "5px"
+            borderRadius: "5px",
           }}
         >
-          {locationLoading ? "位置情報を取得中..." : loading ? "危険度を確認中..." : "現在地の危険度をチェック"}
+          {locationLoading
+            ? "位置情報を取得中..."
+            : loading
+            ? "危険度を確認中..."
+            : "現在地の危険度をチェック"}
         </button>
       </div>
 
       {location && (
-        <div style={{ 
-          marginTop: "20px", 
-          padding: "15px", 
-          backgroundColor: "#f0f0f0", 
-          borderRadius: "5px" 
-        }}>
+        <div
+          style={{
+            marginTop: "20px",
+            padding: "15px",
+            backgroundColor: "#f0f0f0",
+            borderRadius: "5px",
+          }}
+        >
           <h3>検出された位置情報</h3>
           {location.city && location.country && (
-            <p><strong>場所:</strong> {location.city}, {location.country}</p>
+            <p>
+              <strong>場所:</strong> {location.city}, {location.country}
+            </p>
           )}
-          <p><strong>緯度:</strong> {location.latitude?.toFixed(6)}</p>
-          <p><strong>経度:</strong> {location.longitude?.toFixed(6)}</p>
+          <p>
+            <strong>緯度:</strong> {location.latitude?.toFixed(6)}
+          </p>
+          <p>
+            <strong>経度:</strong> {location.longitude?.toFixed(6)}
+          </p>
         </div>
       )}
 
       {error && (
-        <div style={{ 
-          marginTop: "20px", 
-          padding: "15px", 
-          backgroundColor: "#ffebee", 
-          color: "#c62828",
-          borderRadius: "5px",
-          border: "1px solid #ef5350"
-        }}>
+        <div
+          style={{
+            marginTop: "20px",
+            padding: "15px",
+            backgroundColor: "#ffebee",
+            color: "#c62828",
+            borderRadius: "5px",
+            border: "1px solid #ef5350",
+          }}
+        >
           <strong>エラー:</strong> {error}
         </div>
       )}
@@ -140,7 +156,8 @@ const Danger = () => {
           その場所の危険度を自動的に判定します。
         </p>
         <p>
-          ⚠️ 位置情報の使用を許可するよう求められた場合は、「許可」を選択してください。
+          ⚠️
+          位置情報の使用を許可するよう求められた場合は、「許可」を選択してください。
         </p>
       </div>
     </div>
